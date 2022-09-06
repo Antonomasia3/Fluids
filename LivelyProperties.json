@@ -4,10 +4,72 @@
     "value": true,
     "text": "Audio Visualiser"
   },
+  "freqRange": {
+    "max": 63,
+    "min": 1,
+    "tick": 63,
+    "text": "Frequency Range",
+    "type": "slider",
+    "value": 8.0
+  },
+  "freqRangeStart": {
+    "max": 63,
+    "min": 0,
+    "tick": 63,
+    "text": "Frequency Range Start",
+    "type": "slider",
+    "value": 0
+  },
+  "soundSensitivity": {
+    "max": 10,
+    "min": 0,
+    "tick": 10,
+    "text": "Sound Sensitivity",
+    "type": "slider",
+    "value": 10.0
+  },
   "randomSplats": {
     "type": "checkbox",
-    "value": false,
+    "value": true,
     "text": "Random Splats"
+  },
+  "randomDelay": {
+    "max": 60,
+    "min": 0,
+    "tick": 60,
+    "text": "Delay after Visualizer",
+    "type": "slider",
+    "value": 5.0
+  },
+  "randomInterval": {
+    "max": 60,
+    "min": 0,
+    "tick": 60,
+    "text": "Interval",
+    "type": "slider",
+    "value": 1.0
+  },
+  "splatClick": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Splat on Click"
+  },
+  "manualSplat": {
+    "type": "button",
+    "value": "Manual splat"
+  },
+  "amount": {
+    "max": 100,
+    "min": 1,
+    "tick": 100,
+    "text": "Splat amount (random / click / manual)",
+    "type": "slider",
+    "value": 25.0
+  },
+  "onHover": {
+    "type": "checkbox",
+    "value": true,
+    "text": "Enable Hover"
   },
   "quality": {
     "type": "dropdown",
@@ -17,35 +79,49 @@
       "High",
       "Medium",
       "Low",
-      "Very Low"
+      "Very Low",
+	  "Disable"
     ]
   },
   "simResolution": {
     "type": "dropdown",
-    "value": 2,
+    "value": 3,
     "text": "Sim Resolution",
     "items": [
-      "32",
+      "0",
+	  "32",
       "64",
       "128",
       "256"
     ]
   },
+  "captureResolution": {
+    "type": "dropdown",
+    "value": 4,
+    "text": "Capture Resolution (0 = disable)",
+    "items": [
+      "1024",
+      "512",
+      "256",
+      "128",
+      "0"
+    ]
+  },
   "densityDiffusion": {
-    "max": 40,
+    "max": 100,
     "min": 0,
-    "tick": 41,
+    "tick": 101,
     "text": "Density Diffusion",
     "type": "slider",
-    "value": 10
+    "value": 40.0
   },
   "velocityDiffusion": {
-    "max": 400,
+    "max": 1000,
     "min": 0,
-    "tick": 401,
+    "tick": 1001,
     "text": "Velocity Diffusion",
     "type": "slider",
-    "value": 100
+    "value": 0.0
   },
   "pressure": {
     "max": 100,
@@ -53,7 +129,15 @@
     "tick": 101,
     "text": "Pressure",
     "type": "slider",
-    "value": 10
+    "value": 0.0
+  },
+  "pressureIterations": {
+    "max": 100,
+    "min": 0,
+    "tick": 100,
+    "text": "Pressure Iterations",
+    "type": "slider",
+    "value": 25.0
   },
   "vorticity": {
     "max": 50,
@@ -61,7 +145,7 @@
     "tick": 51,
     "text": "Vorticity",
     "type": "slider",
-    "value": 20
+    "value": 50.0
   },
   "splatRadius": {
     "max": 100,
@@ -69,7 +153,15 @@
     "tick": 100,
     "text": "Splat Radius",
     "type": "slider",
-    "value": 20
+    "value": 25.0
+  },
+  "splatForce": {
+    "max": 100,
+    "min": 1,
+    "tick": 100,
+    "text": "Splat Force",
+    "type": "slider",
+    "value": 100.0
   },
   "shading": {
     "type": "checkbox",
@@ -81,18 +173,51 @@
     "value": true,
     "text": "Colorful"
   },
+  "colorUpdate": {
+    "max": 100,
+    "min": 0,
+    "tick": 100,
+    "text": "Color Update Speed",
+    "type": "slider",
+    "value": 10.0
+  },
+  "paused": {
+    "type": "checkbox",
+    "value": false,
+    "text": "Pause"
+  },
   "bloomEnable": {
     "type": "checkbox",
     "value": true,
     "text": "Bloom"
   },
+  "bloomIterations": {
+    "max": 100,
+    "min": 0,
+    "tick": 100,
+    "text": "Bloom Iterations",
+    "type": "slider",
+    "value": 50.0
+  },
+  "bloomResolution": {
+    "type": "dropdown",
+    "value": 3,
+    "text": "Bloom Resolution",
+    "items": [
+      "1024",
+      "512",
+      "256",
+      "128",
+	  "0"
+    ]
+  },
   "bloomIntensity": {
-    "max": 200,
+    "max": 100,
     "min": 10,
-    "tick": 191,
+    "tick": 101,
     "text": "Bloom Intensity",
     "type": "slider",
-    "value": 15
+    "value": 5.0
   },
   "bloomThreshold": {
     "max": 100,
@@ -100,31 +225,56 @@
     "tick": 101,
     "text": "Bloom Threshold",
     "type": "slider",
-    "value": 75
+    "value": 10.0
+  },
+  "bloomSoftKnee": {
+    "max": 100,
+    "min": 0,
+    "tick": 100,
+    "text": "Bloom Soft Knee",
+    "type": "slider",
+    "value": 75.0
   },
   "sunRaysEnable": {
     "type": "checkbox",
     "value": true,
     "text": "Sunrays"
   },
+  "sunraysResolution": {
+    "type": "dropdown",
+    "value": 3,
+    "text": "Sunray Resolution",
+    "items": [
+      "100",
+      "75",
+      "50",
+      "25",
+	  "0"
+    ]
+  },
   "sunRaysWeight": {
     "max": 100,
-    "min": 30,
-    "tick": 71,
+    "min": 0,
+    "tick": 101,
     "text": "Sunray Weight",
     "type": "slider",
-    "value": 40
+    "value": 10.0
   },
   "bgColor": {
     "text": "BG Color",
     "type": "color",
     "value": "#000000"
   },
+  "pointerColor": {
+    "text": "Pointer Color",
+    "type": "color",
+    "value": "#000000"
+  },
   "imgSelect": {
     "type": "folderDropdown",
-    "value": "pexels-neosiam-601798.jpg",
+    "value": "apps.64444.14416131676512756.a4895ce9-cd8d-4c80-a13c-dd63cf1980f1.jpg",
     "text": "Image",
-    "filter": "*.jpg|*.png",
+    "filter": "*",
     "folder": "wallpapers"
   },
   "bgImgChk": {
@@ -132,4 +282,17 @@
     "value": false,
     "text": "Background"
   },
+  "fpsLock": {
+    "type": "checkbox",
+    "value": false,
+    "text": "30FPS Lock"
+  },
+  "screenshot": {
+    "type": "button",
+    "value": "Screenshot"
+  },
+  "reload": {
+    "type": "button",
+    "value": "Reload"
+  }
 }

@@ -28,47 +28,51 @@ const canvas = document.getElementsByTagName('canvas')[0];
 resizeCanvas();
 
 let config = {
-    SIM_RESOLUTION: 128,
-    DYE_RESOLUTION: 1024,
+    AMOUNT: 25,
+    BACK_COLOR: { r: 0, g: 0, b: 0 },
+    BLOOM: true,
+    BLOOM_INTENSITY: 0.5,
+    BLOOM_ITERATIONS: 5,
+    BLOOM_RESOLUTION: 128,
+    BLOOM_SOFT_KNEE: 0.75,
+    BLOOM_THRESHOLD: 1,
     CAPTURE_RESOLUTION: 512,
-    DENSITY_DISSIPATION: 1,
-    VELOCITY_DISSIPATION: 0.2,
-    PRESSURE: 0.8,
-    PRESSURE_ITERATIONS: 20,
-    CURL: 30,
-    SPLAT_RADIUS: 0.25,
-    SPLAT_FORCE: 6000,
-    SHADING: true,
     COLORFUL: true,
     COLOR_UPDATE_SPEED: 10,
+    CURL: 50,
+    DENSITY_DISSIPATION: 4,
+    DYE_RESOLUTION: 512,
+	FREQ_MULTI: 0,
+    FREQ_RANGE: 8,
     PAUSED: false,
-    BACK_COLOR: { r: 0, g: 0, b: 0 },
-    TRANSPARENT: false,
-    BLOOM: true,
-    BLOOM_ITERATIONS: 8,
-    BLOOM_RESOLUTION: 256,
-    BLOOM_INTENSITY: 0.8,
-    BLOOM_THRESHOLD: 0.6,
-    BLOOM_SOFT_KNEE: 0.7,
+    POINTER_COLOR: { r: 0, g: 0, b: 0 },
+    PRESSURE: 0,
+    PRESSURE_ITERATIONS: 25,
+    RANDOM_DELAY: 5000,
+    RANDOM_INTERVAL: 1,
+    SHADING: true,
+    SHOW_MOUSE_MOVEMENT: true,
+    SIM_RESOLUTION: 128,
+    SOUND_SENSITIVITY: 0.1,
+    SPLAT_FORCE: 10000,
+    SPLAT_ON_CLICK: true,
+    SPLAT_RADIUS: 0.25,
     SUNRAYS: true,
-    SUNRAYS_RESOLUTION: 196,
-    SUNRAYS_WEIGHT: 1.0,
-    SOUND_SENSITIVITY: 0.25,
-    FREQ_RANGE: 40,
-    FREQ_MULTI:0.1,
-}
+    SUNRAYS_RESOLUTION: 25,
+    SUNRAYS_WEIGHT: 1,
+    TRANSPARENT: false,
+    VELOCITY_DISSIPATION: 0,
+};
 
-var timer = setInterval(randomSplat, 3500);
+var timer = setInterval(randomSplat, config.RANDOM_INTERVAL);
 var _runRandom = true;
 var _isSleep = false;
 function randomSplat()
 {
     if(_runRandom == true && _isSleep == false && _randomSplats)
-        splatStack.push(parseInt(Math.random() * 20) + 5);
+        splatStack.push(parseInt(config.AMOUNT));
 }
 
-//lively is minimizing browser window to pause.
-//this wont obviously work once I implement proper pause -> todo:- do not call livelyAudioListener() when paused/minimized.
 document.addEventListener("visibilitychange", function() {
   //alert(document.hidden+ " "+document.visibilityState);
   _isSleep = document.hidden;
@@ -97,19 +101,19 @@ function livelyAudioListener(audioArray)  {
     else{
         if(!_runRandom && timeoutBool){
             timeoutBool=false;
-            timeout=setTimeout(()=>_runRandom=timeoutBool=true,1500);
+            timeout=setTimeout(()=>_runRandom=timeoutBool=true,config.RANDOM_DELAY);
         }
     }
 
     let bass = 0.0;
+    let half = Math.floor(audioArray.length / 2);
 
-    for (let i = 0; i <= config.FREQ_RANGE; i++) 
-      bass += audioArray[i]*2;
-      
-    bass /= (config.FREQ_RANGE * 2) * config.FREQ_MULTI;
-    
-    multipleSplats(Math.floor((bass * config.SOUND_SENSITIVITY) * 10)-lastBass);
-    lastBass = (bass,Math.floor((bass * config.SOUND_SENSITIVITY) * 10 ));
+    for (let i = 0; i <= config.FREQ_RANGE; i++) {
+        bass += audioArray[i + config.FREQ_MULTI];
+        bass += audioArray[half + (i + config.FREQ_MULTI)];
+    }
+    bass /= (config.FREQ_RANGE);
+    multipleSplats(Math.floor((bass * config.SOUND_SENSITIVITY) * 10));
 }
 
 function multipleSplats (amount) {
@@ -144,81 +148,311 @@ function livelyPropertyListener(name, val)
     case "quality":
     	switch(val){
 	    	case 0:
-	      		config.DYE_RESOLUTION = 1024;
-	    		break;
+	      	 config.DYE_RESOLUTION = 1024;
+	    	 break;
 	    	case 1:
-	    		config.DYE_RESOLUTION = 512;
-	    		break;
+	    	 config.DYE_RESOLUTION = 512;
+	    	 break;
 	    	case 2:
-	    		config.DYE_RESOLUTION = 256;
-	    		break;
+	    	 config.DYE_RESOLUTION = 256;
+	    	 break;
 	    	case 3:
-	    		config.DYE_RESOLUTION = 128;
-	    		break;
+	    	 config.DYE_RESOLUTION = 128;
+	    	 break;
+			case 4:
+			 config.DYE_RESOLUTION = 0;
+			 break;
     	}
       initFramebuffers();
+      initBloomFramebuffers();
+      initSunraysFramebuffers();
       break;
 	case "simResolution":
 		switch(val){
 			case 0:
-		  		config.SIM_RESOLUTION = 32;
-				break;
+			 config.SIM_RESOLUTION = 0;
+			 break;
 			case 1:
-				config.SIM_RESOLUTION = 64;
-				break;
+		  	 config.SIM_RESOLUTION = 32;
+			 break;
 			case 2:
-				config.SIM_RESOLUTION = 128;
-				break;
+			 config.SIM_RESOLUTION = 64;
+			 break;
 			case 3:
-				config.SIM_RESOLUTION = 256;
-				break;
+			 config.SIM_RESOLUTION = 128;
+			 break;
+			case 4:
+			 config.SIM_RESOLUTION = 256;
+			 break;
+		}
+      initFramebuffers();
+      initBloomFramebuffers();
+      initSunraysFramebuffers();
+      break;
+	case "captureResolution":
+	 switch(val){
+			case 0:
+			 config.CAPTURE_RESOLUTION = 1024;
+			 break;
+			case 1:
+			 config.CAPTURE_RESOLUTION = 512;
+			 break;
+			case 2:
+			 config.CAPTURE_RESOLUTION = 256;
+			 break;
+			case 3:
+			 config.CAPTURE_RESOLUTION = 128;
+			 break;
+			case 4:
+			 config.CAPTURE_RESOLUTION = 0;
+			 break;
+		}
+      initFramebuffers();
+      initBloomFramebuffers();
+      initSunraysFramebuffers();
+      break;
+	case "bloomResolution":
+	 switch(val){
+			case 0:
+			 config.BLOOM_RESOLUTION = 1024;
+			 break;
+			case 1:
+			 config.BLOOM_RESOLUTION = 512;
+			 break;
+			case 2:
+			 config.BLOOM_RESOLUTION = 256;
+			 break;
+			case 3:
+			 config.BLOOM_RESOLUTION = 128;
+			 break;
+			case 4:
+			 config.BLOOM_RESOLUTION = 0;
+			 break;
+		}
+      initFramebuffers();
+      initBloomFramebuffers();
+      initSunraysFramebuffers();
+      break;
+	case "randomInterval":
+	 config.RANDOM_INTERVAL = val;
+		if (_randomSplats) {
+			   clearInterval(timer);
+						timer = setInterval(randomSplat, config.RANDOM_INTERVAL * 1000);
 		}
 		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
+		break;
+	case "amount":
+	 config.AMOUNT = val;
+		if (_randomSplats) {
+			   clearInterval(timer);
+						timer = setInterval(randomSplat, config.RANDOM_INTERVAL * 1000);
+		}
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
 		break;
 	case "densityDiffusion":
 		config.DENSITY_DISSIPATION = val/10;
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
 		break;
 	case "velocityDiffusion":
 		config.VELOCITY_DISSIPATION = val/100;
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
 		break;
 	case "pressure":
 		config.PRESSURE = val/100;
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
 		break;
 	case "vorticity":
 		config.CURL = val;
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
 		break;
 	case "splatRadius":
 		config.SPLAT_RADIUS = val/100;
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
 		break;
 	case "shading":
 		config.SHADING = val;
 		updateKeywords();
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
 		break;
 	case "colorful":
 		config.COLORFUL = val;
+		updateKeywords();
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
 		break;
 	case "bloomEnable":
 		config.BLOOM = val;
 		updateKeywords();
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
 		break;
 	case "bloomIntensity":
-		config.BLOOM_INTENSITY = val/100;
+		config.BLOOM_INTENSITY = val/10;
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
 		break;
 	case "bloomThreshold":
-		config.BLOOM_THRESHOLD = val/100;
+		config.BLOOM_THRESHOLD = val/10;
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
 		break;
 	case "sunRaysEnable":
 		config.SUNRAYS = val;
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
 		updateKeywords();
 		break;
 	case "sunRaysWeight":
-		config.SUNRAYS_WEIGHT = val/100;
+		config.SUNRAYS_WEIGHT = val/10;
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
 		break;
 	case "bgColor":
 	    const tmp = hexToRgb(val);
  		config.BACK_COLOR.r = tmp.r;
 		config.BACK_COLOR.g = tmp.g;
 		config.BACK_COLOR.b = tmp.b;
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
+		break;
+	case "pointerColor":
+	    const ptr = hexToRgb(val);
+ 		config.POINTER_COLOR.r = ptr.r;
+		config.POINTER_COLOR.g = ptr.g;
+		config.POINTER_COLOR.b = ptr.b;
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
+		break;
+	case "splatClick":
+	 config.SPLAT_ON_CLICK = val;
+	 updateKeywords();
+	 initFramebuffers();
+	 initBloomFramebuffers();
+	 initSunraysFramebuffers();
+	 break;
+	case "onHover":
+	 config.SHOW_MOUSE_MOVEMENT = val;
+	 updateKeywords();
+	 initFramebuffers();
+	 initBloomFramebuffers();
+	 initSunraysFramebuffers();
+	 break;
+	case "freqRange":
+	 config.FREQ_RANGE = val;
+		      if (config.FREQ_RANGE + config.FREQ_MULTI > 62) {
+									   config.FREQ_MULTI = 63 - config.FREQ_RANGE;
+								}
+		break;
+	case "freqRangeStart":
+		      if (config.FREQ_RANGE + val > 62) {
+									   config.FREQ_MULTI = 63 - config.FREQ_RANGE;
+								} else {
+									   config.FREQ_MULTI = val;
+								}
+		break;
+	case "soundSensitivity":
+	 config.SOUND_SENSITIVITY = val/10;
+	 initFramebuffers();
+	 initBloomFramebuffers();
+	 initSunraysFramebuffers();
+	 break;
+	case "randomDelay":
+	 config.RANDOM_DELAY = val * 1000;
+	 initFramebuffers();
+	 initBloomFramebuffers();
+	 initSunraysFramebuffers();
+	 break;
+	case "pressureIterations":
+	 config.PRESSURE_ITERATIONS = val;
+	 initFramebuffers();
+	 initBloomFramebuffers();
+	 initSunraysFramebuffers();
+	 break;
+	case "splatForce":
+	 config.SPLAT_FORCE = val * 100;
+	 initFramebuffers();
+	 initBloomFramebuffers();
+	 initSunraysFramebuffers();
+	 break;
+	case "colorUpdate":
+	 config.COLOR_UPDATE_SPEED = val;
+	 initFramebuffers();
+	 initBloomFramebuffers();
+	 initSunraysFramebuffers();
+	 break;
+	case "paused":
+	 config.PAUSED = val;
+	 updateKeywords();
+	 initFramebuffers();
+	 initBloomFramebuffers();
+	 initSunraysFramebuffers();
+	 break;
+	case "bloomIterations":
+	 config.BLOOM_ITERATIONS = val/10;
+	 initFramebuffers();
+	 initBloomFramebuffers();
+	 initSunraysFramebuffers();
+	 break;
+	case "bloomSoftKnee":
+	 config.BLOOM_SOFT_KNEE = val/100;
+	 initFramebuffers();
+	 initBloomFramebuffers();
+	 initSunraysFramebuffers();
+	 break;
+	case "sunraysResolution":
+	 switch(val){
+			case 0:
+			 config.SUNRAYS_RESOLUTION = 100;
+			 break;
+			case 1:
+			 config.SUNRAYS_RESOLUTION = 75;
+			 break;
+			case 2:
+			 config.SUNRAYS_RESOLUTION = 50;
+			 break;
+			case 3:
+			 config.SUNRAYS_RESOLUTION = 25;
+			 break;
+			case 4:
+			 config.SUNRAYS_RESOLUTION = 0;
+			 break;
+		}
+      initFramebuffers();
+      initBloomFramebuffers();
+      initSunraysFramebuffers();
+      break;
+	case "reload":
+	 location.reload();
+		break;
+	case "screenshot":
+	 captureScreenshot();
+		break;
+	case "manualSplat":
+	 splatStack.push(parseInt(config.AMOUNT));
 		break;
 	case "bgImgChk":
         _bgImageChk = val;
@@ -227,6 +461,9 @@ function livelyPropertyListener(name, val)
         {
             document.body.style.backgroundImage = "url(" + _bgImagePath.replace('\\', '/') + ")";
         }
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
 		break;	
     case "imgSelect":
         _bgImagePath = val;
@@ -234,12 +471,21 @@ function livelyPropertyListener(name, val)
         {
             document.body.style.backgroundImage = "url(" + val.replace('\\', '/') + ")";
         }
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
         break;    
     case "randomSplats":	
         _randomSplats = val;
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
         break;
     case "audioReact":    
         _audioReact = val;
+		initFramebuffers();
+		initBloomFramebuffers();
+		initSunraysFramebuffers();
         break;
     }
 }
@@ -272,11 +518,8 @@ pointers.push(new pointerPrototype());
 
 const { gl, ext } = getWebGLContext(canvas);
 
-if (isMobile()) {
-    config.DYE_RESOLUTION = 512;
-}
 if (!ext.supportLinearFiltering) {
-    config.DYE_RESOLUTION = 512;
+    config.DYE_RESOLUTION = 0;
     config.SHADING = false;
     config.BLOOM = false;
     config.SUNRAYS = false;
@@ -368,10 +611,6 @@ function supportRenderTextureFormat (gl, internalFormat, format, type) {
 
     const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
     return status == gl.FRAMEBUFFER_COMPLETE;
-}
-
-function isMobile () {
-    return /Mobi|Android/i.test(navigator.userAgent);
 }
 
 function captureScreenshot () {
@@ -1024,7 +1263,7 @@ let bloomFramebuffers = [];
 let sunrays;
 let sunraysTemp;
 
-let ditheringTexture = createTextureAsync('LDR_LLL1_0.png');
+let ditheringTexture = createTextureAsync();
 
 const blurProgram            = new Program(blurVertexShader, blurShader);
 const copyProgram            = new Program(baseVertexShader, copyShader);
@@ -1232,7 +1471,7 @@ function updateKeywords () {
 
 updateKeywords();
 initFramebuffers();
-multipleSplats(parseInt(Math.random() * 20) + 5);
+multipleSplats(parseInt(Math.random() * config.AMOUNT));
 
 let lastUpdateTime = Date.now();
 let colorUpdateTimer = 0.0;
@@ -1557,7 +1796,7 @@ function checkLastMove(){
 }
 
 canvas.addEventListener('mousemove', e => {
-
+    if (!config.SHOW_MOUSE_MOVEMENT) return;
     if(checkLastMove()){
       let posX = scaleByPixelRatio(e.offsetX);
       let posY = scaleByPixelRatio(e.offsetY);
@@ -1578,7 +1817,13 @@ window.addEventListener('mouseup', () => {
     updatePointerUpData(pointers[0]);
 });
 
+canvas.addEventListener("mousedown", () => {
+    if (!config.SPLAT_ON_CLICK) return;
+    multipleSplats(parseInt(Math.random() * 20) + 5);
+});
+
 canvas.addEventListener('touchstart', e => {
+	   if(!config.SPLAT_ON_CLICK) return;
     e.preventDefault();
     const touches = e.targetTouches;
     while (touches.length >= pointers.length)
@@ -1613,10 +1858,30 @@ window.addEventListener('touchend', e => {
 });
 
 window.addEventListener('keydown', e => {
+    if (e.code === 'KeyS')
+        config.SHADING = !config.SHADING;
+    if (e.code === 'KeyC')
+        config.COLORFUL = !config.COLORFUL;
     if (e.code === 'KeyP')
         config.PAUSED = !config.PAUSED;
+    if (e.code === 'KeyT')
+        config.TRANSPARENT = !config.TRANSPARENT;
+    if (e.code === 'KeyB')
+        config.BLOOM = !config.BLOOM;
+    if (e.code === 'KeyR')
+        config.SUNRAYS = !config.SUNRAYS;
+    if (e.code === 'KeyO')
+        config.SPLAT_ON_CLICK = !config.SPLAT_ON_CLICK;
+    if (e.code === 'KeyM')
+        config.SHOW_MOUSE_MOVEMENT = !config.SHOW_MOUSE_MOVEMENT;
+    if (e.code === 'KeyI')
+        _randomSplats = !_randomSplats;
+				if (e.code === 'KeyL')
+					   location.reload();
+				if (e.code === 'KeyQ')
+					   captureScreenshot()
     if (e.key === ' ')
-        splatStack.push(parseInt(Math.random() * 20) + 5);
+        splatStack.push(parseInt(1));
 });
 
 function updatePointerDownData (pointer, id, posX, posY) {
