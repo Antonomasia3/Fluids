@@ -73,11 +73,11 @@ function randomSplat()
         splatStack.push(parseInt(config.AMOUNT));
 }
 
-document.addEventListener("visibilitychange", function() {
-  //alert(document.hidden+ " "+document.visibilityState);
-  _isSleep = document.hidden;
-
-}, false);
+function livelyWallpaperPlaybackChanged(data)
+{
+ var obj = JSON.parse(data);
+ _isSleep = obj.IsPaused;
+}
 
 let timeout;
 let timeoutBool=true;
